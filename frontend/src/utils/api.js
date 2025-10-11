@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://finance-53gy.onrender.com",
+  baseURL: import.meta.env.VITE_API_URL || "https://finance-53gy.onrender.com/api",
   timeout: 10000, // 10 seconds timeout
 });
 
