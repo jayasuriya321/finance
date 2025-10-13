@@ -21,28 +21,33 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 const app = express();
 
-// ✅ Middleware
+// Middleware
 app.use(express.json());
 
-// ✅ CORS configuration (very important for Netlify + Render)
+// ✅ CORS configuration (works for local dev and Netlify frontend)
 const allowedOrigins = [
-  "http://localhost:5173", // for local dev
-  "https://financeapp09.netlify.app", 
+  "http://localhost:5173",               // Local dev frontend
+  "https://financeapp09.netlify.app"    // Deployed frontend
 ];
 
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // Allow requests like Postman
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = `The CORS policy for this site does not allow access from the specified Origin.`;
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true, // Allow cookies if you use them
+}));
 
-// ✅ Health check route (to confirm Render deployment)
+// Health check
 app.get("/", (req, res) => {
-  res.send("✅ Personal Finance Manager backend is live!");
+  res.send("✅ Backend is live!");
 });
 
-// ✅ Route mounting
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/budgets", budgetRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -54,7 +59,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 
-// ✅ Error handling
+// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
