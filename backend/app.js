@@ -27,7 +27,7 @@ app.use(express.json());
 // ✅ CORS configuration (very important for Netlify + Render)
 const allowedOrigins = [
   "http://localhost:5173", // for local dev
-  "https://financeapp08.netlify.app/login", // ✅ replace with your actual Netlify domain
+  "https://financeapp08.netlify.app/", // ✅ replace with your actual Netlify domain
 ];
 
 app.use(
