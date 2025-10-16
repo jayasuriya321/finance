@@ -71,37 +71,42 @@ export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email)
-      return res.status(400).json({ success: false, message: "Email required" });
+      return res.status(400).json({ success: false, message: "Email is required" });
 
     const user = await User.findOne({ email });
     if (!user)
       return res.status(404).json({ success: false, message: "User not found" });
 
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600 * 1000; // 1 hour
+    // Generate token using schema method
+    const resetToken = user.getResetPasswordToken();
     await user.save();
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
     });
 
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: `"Finance App" <${process.env.SMTP_USER}>`,
       to: user.email,
-      subject: "Password Reset",
-      html: `<p>Reset your password (valid 1 hour): <a href="${resetUrl}">${resetUrl}</a></p>`,
+      subject: "Password Reset Request",
+      html: `<p>Click <a href="${resetUrl}">here</a> to reset your password. This link is valid for 1 hour.</p>`,
     });
 
-    res.json({ success: true, message: "Reset email sent" });
+    res.json({ success: true, message: "Reset email sent successfully" });
   } catch (err) {
     console.error("forgotPassword error:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: "Server error sending password reset email", error: err.message });
   }
 };
+
 
 // ===============================
 // RESET PASSWORD
@@ -113,15 +118,16 @@ export const resetPassword = async (req, res) => {
     if (!password)
       return res.status(400).json({ success: false, message: "Password required" });
 
+    // Hash the incoming token to match DB
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
     const user = await User.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user)
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid or expired token" });
+      return res.status(400).json({ success: false, message: "Invalid or expired token" });
 
     user.password = password; // hashed in pre-save
     user.resetPasswordToken = undefined;

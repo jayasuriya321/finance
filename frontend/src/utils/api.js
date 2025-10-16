@@ -1,11 +1,12 @@
+// src/utils/api.js
 import axios from "axios";
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
-  timeout: 10000, // 10 seconds timeout
+  timeout: 10000,
 });
 
-// Attach token automatically
+// Attach token to all requests
 API.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -15,12 +16,12 @@ API.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Centralized response handling
+// Handle errors globally
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Optional: you can handle 401/403 globally here
-    const message = error.response?.data?.message || error.message || "An error occurred";
+    const message =
+      error.response?.data?.message || error.message || "An error occurred";
     return Promise.reject(new Error(message));
   }
 );

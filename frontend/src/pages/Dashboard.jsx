@@ -22,12 +22,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        await Promise.all([
-          fetchExpenses(),
-          fetchBudgets(),
-          fetchGoals(),
-          fetchRecurrings(),
-        ]);
+        await Promise.all([fetchExpenses(), fetchBudgets(), fetchGoals(), fetchRecurrings()]);
       } finally {
         setLoadingData(false);
       }
@@ -45,7 +40,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10 p-6 font-outfit">
-      <h1 className="text-3xl md:text-4xl font-bold text-gray-800">Dashboard</h1>
+      <h1 className="text-3xl md:text-4xl font-semibold text-gray-800">Dashboard</h1>
 
       {/* ===== Summary Cards ===== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -57,22 +52,36 @@ export default function Dashboard() {
 
       {/* ===== Charts ===== */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <BudgetProgressChart budgets={budgets} />
-        <GoalProgressChart goals={goals} />
-        <RecurringExpensesChart expenses={recurrings} />
+        <ChartWrapper title="Budget Progress">
+          <BudgetProgressChart budgets={budgets} />
+        </ChartWrapper>
+        <ChartWrapper title="Goals Progress">
+          <GoalProgressChart goals={goals} />
+        </ChartWrapper>
+        <ChartWrapper title="Recurring Expenses">
+          <RecurringExpensesChart expenses={recurrings} />
+        </ChartWrapper>
       </div>
     </div>
   );
 }
 
-// ======= Helper Card Component =======
+// ======= Card Component (Static) =======
 function Card({ label, value, color }) {
   return (
-    <div className="bg-white shadow-lg rounded-2xl p-6 flex flex-col justify-between transition-transform transition-shadow duration-300 hover:shadow-2xl hover:scale-105">
-      <div className="overflow-hidden">
-        <span className="text-gray-500 font-medium text-sm md:text-base">{label}</span>
-        <h2 className={`text-3xl md:text-4xl font-bold mt-2 truncate ${color}`}>{value}</h2>
-      </div>
+    <div className="bg-white shadow-lg rounded-2xl p-6 flex flex-col justify-between">
+      <span className="text-gray-500 font-medium text-sm md:text-base">{label}</span>
+      <h2 className={`text-2xl font-semibold mt-2 truncate ${color}`}>{value}</h2>
+    </div>
+  );
+}
+
+// ======= Chart Wrapper Component (Static) =======
+function ChartWrapper({ title, children }) {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6">
+      <h2 className="text-lg font-semibold mb-4 text-gray-700">{title}</h2>
+      {children}
     </div>
   );
 }

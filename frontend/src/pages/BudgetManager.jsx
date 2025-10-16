@@ -65,86 +65,103 @@ export default function BudgetManager() {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto font-outfit space-y-6">
-      <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 text-center sm:text-left">
-        Manage Budgets
-      </h1>
+    <div className="max-w-7xl mx-auto p-6 font-outfit space-y-8">
+      <h1 className="text-3xl md:text-4xl font-semibold text-gray-800">Manage Budgets</h1>
 
-      {/* Messages */}
+      {/* Message Banner */}
       {message.text && (
-        <div className={`p-3 rounded text-sm border ${message.type === "success" ? "bg-green-100 text-green-700 border-green-300" : "bg-red-100 text-red-700 border-red-300"}`}>
+        <div
+          className={`px-5 py-3 rounded-xl shadow-md border ${
+            message.type === "success"
+              ? "bg-green-100 text-green-700 border-green-300"
+              : "bg-red-100 text-red-700 border-red-300"
+          }`}
+        >
           {message.text}
         </div>
       )}
 
-      {/* Add Budget Form */}
-      <div className="bg-white shadow-lg rounded-xl border border-gray-100 flex flex-col sm:flex-row gap-3 items-center p-4 sm:p-6">
-        <input
-          type="text"
-          placeholder="Budget Name"
-          value={form.name}
-          onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="p-3 border rounded-lg flex-1 focus:ring-2 focus:ring-indigo-500 w-full"
-        />
-        <input
-          type="number"
-          placeholder="Limit (₹)"
-          value={form.limit}
-          onChange={(e) => setForm({ ...form, limit: e.target.value })}
-          className="p-3 border rounded-lg w-full sm:w-40 focus:ring-2 focus:ring-indigo-500"
-        />
-        <button
-          onClick={handleAdd}
-          disabled={loading}
-          className="bg-indigo-600 text-white py-3 px-6 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center disabled:opacity-60 w-full sm:w-auto"
-        >
-          {loading ? <ButtonLoader className="h-5 w-5" /> : "Add Budget"}
-        </button>
+      {/* Add Budget Card */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100">
+        <div className="grid gap-4 md:grid-cols-3 sm:grid-cols-2">
+          <input
+            type="text"
+            placeholder="Budget Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className="p-3 border rounded-lg focus:outline-none w-full"
+          />
+          <input
+            type="number"
+            placeholder="Limit (₹)"
+            value={form.limit}
+            onChange={(e) => setForm({ ...form, limit: e.target.value })}
+            className="p-3 border rounded-lg focus:outline-none w-full"
+          />
+          <button
+            onClick={handleAdd}
+            disabled={loading}
+            className="py-3 rounded-lg bg-black text-white font-semibold hover:bg-[#f45a57] transition flex justify-center items-center disabled:opacity-60 w-full"
+          >
+            {loading ? <ButtonLoader /> : "Add Budget"}
+          </button>
+        </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-2 w-full sm:w-auto">
-        <Search className="text-gray-400 w-5 h-5" />
-        <input
-          type="text"
-          placeholder="Search budgets..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="p-2 border rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-        />
+      {/* Search Card */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border border-gray-100">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <Search className="text-gray-400 w-5 h-5" />
+          <input
+            type="text"
+            placeholder="Search budgets..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="p-2 border rounded-lg w-full md:w-64 focus:outline-none"
+          />
+        </div>
       </div>
 
-      {/* Budgets List */}
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Budgets Grid */}
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredBudgets.length === 0 ? (
           <p className="text-gray-500 text-center col-span-full py-6">No budgets found</p>
         ) : (
-          filteredBudgets.map(b => {
+          filteredBudgets.map((b) => {
             const spent = b.spent || 0;
             const overBudget = spent > b.limit;
             const progressPercent = Math.min((spent / b.limit) * 100, 100);
 
             return (
-              <div key={b._id} className="bg-white shadow-lg border border-gray-100 rounded-xl p-4 flex flex-col justify-between hover:shadow-2xl transition">
+              <div
+                key={b._id}
+                className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 flex flex-col justify-between hover:shadow-xl transition-all duration-300"
+              >
                 {editingId === b._id ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <input
                       type="text"
                       value={editForm.name}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-3 border rounded-lg focus:outline-none"
                     />
                     <input
                       type="number"
                       value={editForm.limit}
                       onChange={(e) => setEditForm({ ...editForm, limit: e.target.value })}
-                      className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-3 border rounded-lg focus:outline-none"
                     />
-                    <div className="flex gap-2 mt-2">
-                      <button onClick={() => handleEdit(b._id)} className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(b._id)}
+                        className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2"
+                      >
                         <Check className="w-4 h-4" /> Save
                       </button>
-                      <button onClick={() => setEditingId(null)} className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 flex items-center gap-2">
+                      <button
+                        onClick={() => setEditingId(null)}
+                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 flex items-center gap-2"
+                      >
                         <X className="w-4 h-4" /> Cancel
                       </button>
                     </div>
@@ -154,13 +171,20 @@ export default function BudgetManager() {
                     <div className="flex justify-between items-center mb-3">
                       <div>
                         <p className="text-gray-800 font-semibold text-lg">{b.name}</p>
-                        <p className={`text-sm ${overBudget ? "text-red-600 font-semibold" : "text-gray-600"}`}>
+                        <p
+                          className={`text-sm ${
+                            overBudget ? "text-red-600 font-semibold" : "text-gray-600"
+                          }`}
+                        >
                           Limit: ₹{b.limit.toLocaleString()} | Spent: ₹{spent.toLocaleString()}
                         </p>
                       </div>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => { setEditingId(b._id); setEditForm({ name: b.name, limit: b.limit }); }}
+                          onClick={() => {
+                            setEditingId(b._id);
+                            setEditForm({ name: b.name, limit: b.limit });
+                          }}
                           className="bg-blue-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-blue-600 flex items-center gap-1"
                         >
                           <Edit2 className="w-4 h-4" /> Edit
@@ -173,9 +197,14 @@ export default function BudgetManager() {
                       </div>
                     </div>
 
-                    {/* Progress bar */}
+                    {/* Progress Bar */}
                     <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                      <div className={`h-3 rounded-full transition-all duration-300 ${overBudget ? "bg-red-500" : "bg-blue-500"}`} style={{ width: `${progressPercent}%` }}></div>
+                      <div
+                        className={`h-3 rounded-full transition-all duration-300 ${
+                          overBudget ? "bg-red-500" : "bg-blue-500"
+                        }`}
+                        style={{ width: `${progressPercent}%` }}
+                      ></div>
                     </div>
                   </>
                 )}

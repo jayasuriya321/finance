@@ -60,7 +60,7 @@ export default function DashboardLayout() {
           </p>
         </div>
 
-        <nav className="mt-6 px-3 space-y-2" role="menu">
+        <nav className="mt-6 mb-6 px-3 space-y-2" role="menu">
           {menuItems.map((item) => (
             <NavLink
               key={item.name}
@@ -80,7 +80,7 @@ export default function DashboardLayout() {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 w-full px-3 py-4 border-t">
+        <div className="w-full px-3 py-4 border-t">
           <button
             onClick={handleLogout}
             className="flex items-center p-3 w-full rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 transition"

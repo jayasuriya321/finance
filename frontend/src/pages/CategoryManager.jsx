@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import API from "../utils/api";
 import Confirm from "../components/Confirm";
 import ButtonLoader from "../components/ButtonLoader";
-import { Search, Edit2, Check, X } from "lucide-react";
+import { Search, Edit2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function CategoryManager() {
@@ -26,7 +26,6 @@ export default function CategoryManager() {
       const res = await API.get("/categories", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // ✅ Use res.data.data because backend returns { success: true, data: [...] }
       const data = res.data?.data || [];
       setCategories(data);
     } catch (err) {
@@ -42,9 +41,6 @@ export default function CategoryManager() {
     fetchCategories();
   }, [token]);
 
-  // =========================
-  // Auto-clear messages
-  // =========================
   useEffect(() => {
     if (!message.text) return;
     const timer = setTimeout(() => setMessage({ type: "", text: "" }), 3000);
@@ -52,7 +48,7 @@ export default function CategoryManager() {
   }, [message]);
 
   // =========================
-  // Add new category
+  // Add Category
   // =========================
   const handleAdd = async () => {
     const name = newCategory.trim();
@@ -81,7 +77,7 @@ export default function CategoryManager() {
   };
 
   // =========================
-  // Delete category
+  // Delete Category
   // =========================
   const handleDelete = async (id) => {
     try {
@@ -99,24 +95,18 @@ export default function CategoryManager() {
   };
 
   // =========================
-  // Start editing
+  // Edit Category
   // =========================
   const startEdit = (cat) => {
     setEditingId(cat._id);
     setEditName(cat.name);
   };
 
-  // =========================
-  // Cancel editing
-  // =========================
   const cancelEdit = () => {
     setEditingId(null);
     setEditName("");
   };
 
-  // =========================
-  // Submit edit
-  // =========================
   const handleEdit = async () => {
     const name = editName.trim();
     if (!name) {
@@ -144,9 +134,6 @@ export default function CategoryManager() {
     }
   };
 
-  // =========================
-  // Filter categories
-  // =========================
   const filteredCategories = categories.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase())
   );
@@ -155,16 +142,18 @@ export default function CategoryManager() {
   // Render
   // =========================
   return (
-    <div className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Manage Categories</h1>
+    <div className="max-w-7xl mx-auto p-6 font-outfit">
+      <h1 className="text-3xl font-semibold mb-6 text-gray-800">
+        Manage Categories
+      </h1>
 
       {/* Message */}
       {message.text && (
         <div
-          className={`mb-4 p-3 rounded text-sm border transition-all duration-300 ${
+          className={`mb-5 p-3 rounded-lg text-sm border shadow-sm transition-all ${
             message.type === "success"
-              ? "bg-green-100 text-green-700 border-green-300"
-              : "bg-red-100 text-red-700 border-red-300"
+              ? "bg-green-50 text-green-700 border-green-300"
+              : "bg-red-50 text-red-700 border-red-300"
           }`}
         >
           {message.text}
@@ -172,10 +161,11 @@ export default function CategoryManager() {
       )}
 
       {/* Add / Edit Category */}
-      <div className="bg-white shadow rounded-lg p-4 mb-6 border border-gray-100">
-        <h2 className="text-lg font-semibold mb-3 text-gray-700">
+      <div className="bg-white p-5 rounded-2xl shadow-md border border-gray-100 mb-6">
+        <h2 className="text-lg font-semibold mb-4 text-gray-700">
           {editingId ? "Edit Category" : "Add New Category"}
         </h2>
+
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="text"
@@ -184,19 +174,19 @@ export default function CategoryManager() {
             onChange={(e) =>
               editingId ? setEditName(e.target.value) : setNewCategory(e.target.value)
             }
-            className="flex-1 p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none"
           />
           <button
             onClick={editingId ? handleEdit : handleAdd}
             disabled={loading}
-            className="bg-indigo-600 text-white px-5 py-2 rounded hover:bg-indigo-700 transition flex items-center justify-center disabled:opacity-60"
+            className="bg-black text-white px-6 py-2.5 rounded-lg hover:bg-[#f45a57] transition flex items-center justify-center disabled:opacity-60 shadow-sm"
           >
             {loading ? <ButtonLoader className="h-5 w-5" /> : editingId ? "Update" : "Add"}
           </button>
           {editingId && (
             <button
               onClick={cancelEdit}
-              className="bg-gray-300 text-gray-700 px-5 py-2 rounded hover:bg-gray-400 transition"
+              className="bg-gray-200 text-gray-700 px-6 py-2.5 rounded-xl hover:bg-gray-300 transition shadow-sm"
             >
               Cancel
             </button>
@@ -204,20 +194,20 @@ export default function CategoryManager() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center mb-5 gap-2">
-        <Search className="text-gray-500 w-5 h-5" />
+      {/* Search Bar */}
+      <div className="flex items-center gap-2 mb-5 bg-white p-3 rounded-xl shadow-sm border border-gray-100">
+        <Search className="text-gray-400 w-5 h-5" />
         <input
           type="text"
           placeholder="Search categories..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 p-2 border rounded focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+          className="flex-1 border-none outline-none text-gray-700 placeholder-gray-400 bg-transparent"
         />
       </div>
 
       {/* Category List */}
-      <div className="bg-white shadow rounded-lg p-4 border border-gray-100 transition-all">
+      <div className="bg-white shadow-md rounded-2xl border border-gray-100 p-5">
         <h2 className="text-lg font-semibold mb-4 text-gray-700">Your Categories</h2>
 
         {fetching ? (
@@ -228,17 +218,17 @@ export default function CategoryManager() {
             <p>No categories found</p>
           </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="divide-y divide-gray-100">
             {filteredCategories.map((cat) => (
               <li
                 key={cat._id}
-                className="flex justify-between items-center p-3 rounded border hover:shadow-sm transition-all duration-200"
+                className="flex justify-between items-center py-3 hover:bg-gray-50 px-2 rounded-lg transition-all"
               >
                 <span className="text-gray-800 font-medium">{cat.name}</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => startEdit(cat)}
-                    className="bg-blue-500 text-white px-3 py-1.5 text-sm rounded hover:bg-blue-600 transition flex items-center gap-1"
+                    className="bg-blue-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-blue-600 transition flex items-center gap-1"
                   >
                     <Edit2 className="w-4 h-4" /> Edit
                   </button>
@@ -246,7 +236,7 @@ export default function CategoryManager() {
                     message={`Are you sure you want to delete "${cat.name}"?`}
                     onConfirm={() => handleDelete(cat._id)}
                   >
-                    <button className="bg-red-500 text-white px-3 py-1.5 text-sm rounded hover:bg-red-600 transition">
+                    <button className="bg-red-500 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-red-600 transition">
                       Delete
                     </button>
                   </Confirm>

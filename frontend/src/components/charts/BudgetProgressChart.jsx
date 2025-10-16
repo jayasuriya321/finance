@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recha
 export default function BudgetProgressChart({ budgets }) {
   if (!budgets || budgets.length === 0) {
     return (
-      <div className="w-full h-72 flex items-center justify-center bg-white rounded-2xl shadow-lg">
+      <div className="w-full h-72 flex items-center justify-center">
         <p className="text-gray-500 font-medium text-center">
           No budget data available
         </p>
@@ -19,10 +19,10 @@ export default function BudgetProgressChart({ budgets }) {
   }));
 
   return (
-    <div className="w-full h-72 bg-white p-5 rounded-2xl shadow-lg hover:shadow-2xl transition-all">
-      <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-4 truncate font-outfit">
+    <div className="w-full h-72">
+      {/* <h3 className="text-lg md:text-xl font-semibold text-gray-700 mb-4 truncate font-outfit">
         Budget Usage
-      </h3>
+      </h3> */}
       <ResponsiveContainer width="100%" height="90%">
         <PieChart>
           <Pie

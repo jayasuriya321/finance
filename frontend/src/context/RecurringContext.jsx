@@ -1,11 +1,4 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-  useMemo,
-} from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import API from "../utils/api";
 import { useAuth } from "./AuthContext";
 
@@ -18,18 +11,27 @@ export const RecurringProvider = ({ children }) => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // 🔔 Auto-clear messages after delay
   const showMessage = useCallback((type, message) => {
     if (type === "error") setError(message);
     else setSuccess(message);
-
     setTimeout(() => {
       setError("");
       setSuccess("");
     }, 3000);
   }, []);
 
-  /** 📦 Fetch recurring expenses */
+  // ✅ Normalize data (_id always available)
+  const normalizeRecurring = (r) => ({
+    _id: r._id || r.id,
+    name: r.name,
+    amount: r.amount,
+    frequency: r.frequency,
+    startDate: r.startDate,
+    lastRun: r.lastRun,
+    nextDueDate: r.nextDueDate,
+    active: r.active,
+  });
+
   const fetchRecurrings = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -37,7 +39,9 @@ export const RecurringProvider = ({ children }) => {
       const res = await API.get("/recurrings", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      const data = Array.isArray(res.data.data) ? res.data.data : [];
+      const data = Array.isArray(res.data.data)
+        ? res.data.data.map(normalizeRecurring)
+        : [];
       setRecurrings(data);
     } catch (err) {
       console.error("Error fetching recurrings:", err);
@@ -48,7 +52,6 @@ export const RecurringProvider = ({ children }) => {
     }
   }, [token, showMessage]);
 
-  /** ➕ Add recurring expense */
   const addRecurring = useCallback(async (data) => {
     if (!token) return null;
     setLoading(true);
@@ -56,7 +59,7 @@ export const RecurringProvider = ({ children }) => {
       const res = await API.post("/recurrings", data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRecurrings((prev) => [res.data.data, ...prev]);
+      setRecurrings((prev) => [normalizeRecurring(res.data.data), ...prev]);
       showMessage("success", "Recurring expense added successfully!");
       return res.data.data;
     } catch (err) {
@@ -68,19 +71,17 @@ export const RecurringProvider = ({ children }) => {
     }
   }, [token, showMessage]);
 
-  /** ✏️ Update recurring expense */
   const updateRecurring = useCallback(async (id, data) => {
-    if (!token) return null;
+    if (!token || !id) return null;
     setLoading(true);
     try {
       const res = await API.put(`/recurrings/${id}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setRecurrings((prev) =>
-        prev.map((r) => (r._id === id ? res.data.data : r))
-      );
+      const updated = normalizeRecurring(res.data.data);
+      setRecurrings((prev) => prev.map((r) => (r._id === id ? updated : r)));
       showMessage("success", "Recurring expense updated successfully!");
-      return res.data.data;
+      return updated;
     } catch (err) {
       console.error("Error updating recurring:", err);
       showMessage("error", err.response?.data?.message || "Failed to update recurring expense");
@@ -90,9 +91,8 @@ export const RecurringProvider = ({ children }) => {
     }
   }, [token, showMessage]);
 
-  /** ❌ Delete recurring expense */
   const deleteRecurring = useCallback(async (id) => {
-    if (!token) return;
+    if (!token || !id) return;
     setLoading(true);
     try {
       await API.delete(`/recurrings/${id}`, {
@@ -109,25 +109,20 @@ export const RecurringProvider = ({ children }) => {
     }
   }, [token, showMessage]);
 
-  // 🧠 Memoized context value for optimization
-  const value = useMemo(
-    () => ({
-      recurrings,
-      loading,
-      error,
-      success,
-      fetchRecurrings,
-      addRecurring,
-      updateRecurring,
-      deleteRecurring,
-    }),
-    [recurrings, loading, error, success, fetchRecurrings, addRecurring, updateRecurring, deleteRecurring]
-  );
-
-  // 🚀 Auto-fetch recurrings on auth ready
   useEffect(() => {
     if (ready && token) fetchRecurrings();
   }, [ready, token, fetchRecurrings]);
+
+  const value = useMemo(() => ({
+    recurrings,
+    loading,
+    error,
+    success,
+    fetchRecurrings,
+    addRecurring,
+    updateRecurring,
+    deleteRecurring,
+  }), [recurrings, loading, error, success, fetchRecurrings, addRecurring, updateRecurring, deleteRecurring]);
 
   return (
     <RecurringContext.Provider value={value}>
@@ -136,10 +131,8 @@ export const RecurringProvider = ({ children }) => {
   );
 };
 
-// 🪝 Custom Hook
 export const useRecurring = () => {
-    const context = useContext(RecurringContext);
-    if (!context)
-      throw new Error("useRecurring must be used within a RecurringProvider");
-    return context;
+  const context = useContext(RecurringContext);
+  if (!context) throw new Error("useRecurring must be used within a RecurringProvider");
+  return context;
 };

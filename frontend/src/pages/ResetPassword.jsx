@@ -34,9 +34,9 @@ export default function ResetPassword() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-50 to-blue-100 px-4">
+    <div className="flex items-center justify-center min-h-screen bg-[#f45a5714] px-4">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-md border border-gray-100">
-        <h2 className="text-3xl font-bold text-center mb-6 text-gray-800 font-outfit">
+        <h2 className="text-3xl font-semibold text-center mb-6 text-gray-800 font-outfit">
           Set New Password
         </h2>
 
@@ -49,7 +49,7 @@ export default function ResetPassword() {
             placeholder="New Password (min 8 characters)"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none border-gray-300"
+            className="w-full p-3 border rounded-lg focus:outline-none border-gray-300"
           />
           <input
             type="password"
@@ -57,12 +57,12 @@ export default function ResetPassword() {
             placeholder="Confirm New Password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none border-gray-300"
+            className="w-full p-3 border rounded-lg focus:outline-none border-gray-300"
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition disabled:opacity-60"
+            className="w-full bg-black text-white py-3 rounded-lg hover:bg-[#f45a57] transition disabled:opacity-60"
           >
             {loading ? "Resetting..." : "Reset Password"}
           </button>

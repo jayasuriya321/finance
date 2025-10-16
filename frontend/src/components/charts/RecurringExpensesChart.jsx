@@ -13,7 +13,7 @@ import {
 export default function RecurringExpensesChart({ expenses }) {
   if (!expenses || expenses.length === 0) {
     return (
-      <div className="w-full h-72 flex items-center justify-center bg-white rounded-2xl shadow-lg">
+      <div className="w-full h-72 flex items-center justify-center">
         <p className="text-gray-500 font-medium text-center">
           No recurring expenses data
         </p>
@@ -43,10 +43,7 @@ export default function RecurringExpensesChart({ expenses }) {
     .map(({ month, year, amount }) => ({ month: `${month} ${year}`, amount }));
 
   return (
-    <div className="w-full h-72 bg-white p-5 rounded-2xl shadow-lg hover:shadow-2xl transition-all">
-      <h3 className="text-lg md:text-xl font-semibold mb-4 text-gray-700 truncate font-outfit">
-        Recurring Expenses
-      </h3>
+    <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="90%">
         <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />

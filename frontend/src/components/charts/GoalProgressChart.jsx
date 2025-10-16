@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, Cell
 export default function GoalProgressChart({ goals }) {
   if (!goals || goals.length === 0) {
     return (
-      <div className="w-full h-72 flex items-center justify-center bg-white rounded-2xl shadow-lg">
+      <div className="w-full h-72 flex items-center justify-center">
         <p className="text-gray-500 font-medium text-center">
           No goal data available
         </p>
@@ -26,10 +26,7 @@ export default function GoalProgressChart({ goals }) {
   }));
 
   return (
-    <div className="w-full h-72 bg-white p-5 rounded-2xl shadow-lg hover:shadow-2xl transition-all">
-      <h3 className="text-lg md:text-xl font-semibold mb-4 text-gray-700 truncate font-outfit">
-        Goal Progress
-      </h3>
+    <div className="w-full h-72">
       <ResponsiveContainer width="100%" height="90%">
         <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
           <XAxis

@@ -71,16 +71,15 @@ export const updateGoal = async (req, res) => {
     const goal = await Goal.findById(req.params.id);
 
     if (!goal) return res.status(404).json({ success: false, message: "Goal not found" });
-    if (goal.user.toString() !== req.user._id.toString()) {
+    if (goal.user.toString() !== req.user._id.toString())
       return res.status(403).json({ success: false, message: "Unauthorized" });
-    }
 
-    if (title) goal.title = title.trim();
-    if (category !== undefined) goal.category = category;
-    if (targetAmount) goal.targetAmount = Number(targetAmount);
-    if (deadline) goal.deadline = deadline;
-    if (description) goal.description = description;
-    if (color) goal.color = color;
+    if (title != null) goal.title = title.trim();
+    if (category != null) goal.category = category;
+    if (targetAmount != null) goal.targetAmount = Number(targetAmount);
+    if (deadline != null) goal.deadline = deadline;
+    if (description != null) goal.description = description;
+    if (color != null) goal.color = color;
 
     await goal.save();
     res.json({ success: true, message: "Goal updated successfully", data: goal });
@@ -89,6 +88,7 @@ export const updateGoal = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error updating goal" });
   }
 };
+
 
 // ===============================
 // DELETE GOAL
