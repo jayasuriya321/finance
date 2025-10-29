@@ -4,42 +4,53 @@ import API from "../utils/api";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  // ===== State =====
   const [user, setUser] = useState(() => {
     const storedUser = localStorage.getItem("user");
-    return storedUser ? JSON.parse(storedUser) : null;
+    try {
+      return storedUser ? JSON.parse(storedUser) : null;
+    } catch {
+      localStorage.removeItem("user");
+      return null;
+    }
   });
-  const [token, setToken] = useState(() => localStorage.getItem("token"));
+  const [token, setToken] = useState(() => localStorage.getItem("token") || null);
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Auto-clear messages
+  // ===== Auto-clear messages =====
   const showMessage = (type, message) => {
     if (type === "error") setError(message);
     else setSuccess(message);
+
     setTimeout(() => {
       setError("");
       setSuccess("");
     }, 3000);
   };
 
-  // Fetch current user from backend
+  // ===== Fetch current user =====
   const fetchUser = useCallback(async () => {
     if (!token) {
       setReady(true);
       return;
     }
+
     try {
       const res = await API.get("/users/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       setUser(res.data.user);
       localStorage.setItem("user", JSON.stringify(res.data.user));
+
+      // Set default auth header
       API.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } catch (err) {
       console.error("Fetch user error:", err);
-      logout(true); // Force logout silently
+      logout(true); // silent logout
       showMessage("error", "Session expired. Please login again.");
     } finally {
       setReady(true);
@@ -50,7 +61,7 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [fetchUser]);
 
-  // Login function
+  // ===== Login =====
   const login = async (email, password) => {
     try {
       setLoading(true);
@@ -59,7 +70,6 @@ export const AuthProvider = ({ children }) => {
 
       setUser(userData);
       setToken(newToken);
-
       localStorage.setItem("user", JSON.stringify(userData));
       localStorage.setItem("token", newToken);
 
@@ -75,7 +85,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
+  // ===== Logout =====
   const logout = useCallback((silent = false) => {
     setUser(null);
     setToken(null);
@@ -85,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     if (!silent) showMessage("success", "Logged out successfully!");
   }, []);
 
-  // Refresh user info manually
+  // ===== Refresh user manually =====
   const refreshUser = async () => {
     await fetchUser();
   };
@@ -105,11 +115,18 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user && !!token,
       }}
     >
-      {ready ? children : <div className="text-center py-20 font-outfit text-gray-600">Loading user...</div>}
+      {ready ? (
+        children
+      ) : (
+        <div className="text-center py-20 font-outfit text-gray-600">
+          Loading user...
+        </div>
+      )}
     </AuthContext.Provider>
   );
 };
 
+// ===== Hook to use auth context =====
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within an AuthProvider");

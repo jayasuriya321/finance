@@ -6,28 +6,28 @@ import {
   forgotPassword,
   resetPassword,
   getMe,
-  updateMe
+  updateMe,
+  getPreferences,
+  updatePreferences,
 } from "../controllers/userController.js";
 import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// ===============================
-// AUTH ROUTES
-// ===============================
-router.post("/register", register);          // User registration
-router.post("/login", login);                // User login
+// AUTH
+router.post("/register", register);
+router.post("/login", login);
 
-// ===============================
 // PASSWORD RESET
-// ===============================
-router.post("/forgot-password", forgotPassword);           // Request reset email
-router.post("/reset-password/:token", resetPassword);     // Reset password with token
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password/:token", resetPassword);
 
-// ===============================
-// PROFILE (PROTECTED)
-// ===============================
-router.get("/me", protect, getMe);          // Get current user profile
-router.put("/me", protect, updateMe);       // Update current user profile
+// PROFILE
+router.get("/me", protect, getMe);
+router.put("/me", protect, updateMe);
+
+// PREFERENCES
+router.get("/preferences", protect, getPreferences);
+router.patch("/preferences", protect, updatePreferences);
 
 export default router;

@@ -14,6 +14,9 @@ import RecurringExpenseManager from "./pages/RecurringExpenseManager";
 import Goals from "./pages/Goals";
 import Profile from "./pages/Profile";
 import DashboardLayout from "./components/DashboardLayout";
+import IncomeManager from "./pages/IncomeManager.jsx";
+import Settings from "./pages/Settings.jsx";
+
 
 function App() {
   return (
@@ -32,7 +35,9 @@ function App() {
         <Route path="budgets" element={<BudgetManager />} />
         <Route path="recurring-expenses" element={<RecurringExpenseManager />} />
         <Route path="goals" element={<Goals />} />
+        <Route path="incomes" element={<IncomeManager />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
       </Route>
 
       {/* Redirect unknown paths */}

@@ -1,5 +1,6 @@
 import Expense from "../models/Expense.js";
 import Goal from "../models/Goal.js";
+import Budget from "../models/Budget.js"; // ✅ Import Budget model
 
 // ===============================
 // GET ALL EXPENSES
@@ -15,7 +16,7 @@ export const getExpenses = async (req, res) => {
 };
 
 // ===============================
-// ADD EXPENSE (Update Goal Progress)
+// ADD EXPENSE (Update Goal Progress + Budget Limit Check)
 // ===============================
 export const addExpense = async (req, res) => {
   try {
@@ -24,6 +25,7 @@ export const addExpense = async (req, res) => {
       return res.status(400).json({ success: false, message: "Amount & category required" });
     }
 
+    // Create expense
     const expense = await Expense.create({
       user: req.user._id,
       amount,
@@ -32,7 +34,7 @@ export const addExpense = async (req, res) => {
       date: date || Date.now(),
     });
 
-    // Update related goal if exists (category match)
+    // ✅ Update related goal
     const goal = await Goal.findOne({ user: req.user._id, category });
     if (goal) {
       goal.currentAmount += Number(amount);
@@ -40,7 +42,32 @@ export const addExpense = async (req, res) => {
       await goal.save();
     }
 
-    res.status(201).json({ success: true, data: expense });
+    // ✅ Budget check logic
+    const budget = await Budget.findOne({ user: req.user._id, category });
+    let warningMessage = null;
+
+    if (budget) {
+      const categoryExpenses = await Expense.aggregate([
+        { $match: { user: req.user._id, category } },
+        { $group: { _id: "$category", totalSpent: { $sum: "$amount" } } },
+      ]);
+
+      const totalSpent = categoryExpenses[0]?.totalSpent || 0;
+
+      if (totalSpent > budget.amount) {
+        warningMessage = `⚠️ You have exceeded your budget for "${category}"! 
+        (Spent ₹${totalSpent}, Budget ₹${budget.amount})`;
+      } else if (totalSpent > budget.amount * 0.9) {
+        warningMessage = `🔔 Warning: You’ve used over 90% of your budget for "${category}". 
+        (Spent ₹${totalSpent}, Budget ₹${budget.amount})`;
+      }
+    }
+
+    res.status(201).json({
+      success: true,
+      data: expense,
+      warning: warningMessage, // ✅ send to frontend
+    });
   } catch (err) {
     console.error("addExpense error:", err);
     res.status(500).json({ success: false, message: "Server error adding expense" });
@@ -59,7 +86,6 @@ export const deleteExpense = async (req, res) => {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    // Rollback goal progress if applicable
     const goal = await Goal.findOne({ user: req.user._id, category: expense.category });
     if (goal) {
       goal.currentAmount = Math.max(0, goal.currentAmount - Number(expense.amount));
@@ -75,7 +101,7 @@ export const deleteExpense = async (req, res) => {
 };
 
 // ===============================
-// EXPENSE REPORT: TOTALS BY CATEGORY & MONTH
+// EXPENSE REPORT
 // ===============================
 export const getExpenseReport = async (req, res) => {
   try {
@@ -85,10 +111,8 @@ export const getExpenseReport = async (req, res) => {
     const totalByMonth = {};
 
     expenses.forEach((e) => {
-      // Totals by category
       totalByCategory[e.category] = (totalByCategory[e.category] || 0) + Number(e.amount || 0);
 
-      // Totals by month
       const d = new Date(e.date || e.createdAt);
       const key = `${d.toLocaleString("default", { month: "short" })} ${d.getFullYear()}`;
       totalByMonth[key] = (totalByMonth[key] || 0) + Number(e.amount || 0);
@@ -102,7 +126,7 @@ export const getExpenseReport = async (req, res) => {
 };
 
 // ===============================
-// OPTIONAL: Get expenses within a date range (dashboard filters)
+// GET EXPENSES BY DATE RANGE
 // ===============================
 export const getExpensesByDateRange = async (req, res) => {
   try {

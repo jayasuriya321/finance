@@ -107,7 +107,6 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-
 // ===============================
 // RESET PASSWORD
 // ===============================
@@ -181,5 +180,42 @@ export const updateMe = async (req, res) => {
   } catch (err) {
     console.error("updateMe error:", err);
     res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ===============================
+// GET USER PREFERENCES
+// ===============================
+export const getPreferences = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    res.json({ success: true, data: user.preferences });
+  } catch (err) {
+    console.error("getPreferences error:", err);
+    res.status(500).json({ success: false, message: "Failed to fetch preferences" });
+  }
+};
+
+// ===============================
+// UPDATE USER PREFERENCES
+// ===============================
+export const updatePreferences = async (req, res) => {
+  try {
+    const { theme, currency, notifications } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+    if (theme) user.preferences.theme = theme;
+    if (currency) user.preferences.currency = currency;
+    if (notifications) user.preferences.notifications = notifications;
+
+    await user.save();
+
+    res.json({ success: true, data: user.preferences });
+  } catch (err) {
+    console.error("updatePreferences error:", err);
+    res.status(500).json({ success: false, message: "Failed to update preferences" });
   }
 };

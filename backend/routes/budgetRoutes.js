@@ -7,15 +7,15 @@ import {
   updateBudget,
   deleteBudget,
   getBudgetSummary,
+  getBudgetAlerts, // ✅ new controller
 } from "../controllers/budgetController.js";
 
 const router = express.Router();
 
-// Protect all budget routes
 router.use(protect);
 
 // ===============================
-// GET ALL BUDGETS (with usage & alerts)
+// GET ALL BUDGETS
 // ===============================
 router.get("/", getBudgets);
 
@@ -25,17 +25,22 @@ router.get("/", getBudgets);
 router.post("/", addBudget);
 
 // ===============================
-// UPDATE A BUDGET (name or limit)
+// UPDATE BUDGET
 // ===============================
 router.put("/:id", updateBudget);
 
 // ===============================
-// DELETE A BUDGET
+// DELETE BUDGET
 // ===============================
 router.delete("/:id", deleteBudget);
 
 // ===============================
-// GET BUDGET SUMMARY (for dashboard charts)
+// 🔔 GET BUDGET ALERTS
+// ===============================
+router.get("/alerts", getBudgetAlerts);
+
+// ===============================
+// GET BUDGET SUMMARY
 // ===============================
 router.get("/summary/all", getBudgetSummary);
 

@@ -14,6 +14,10 @@ import goalRoutes from "./routes/goalRoutes.js";
 import recurringExpenseRoutes from "./routes/recurringExpenseRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import incomeRoutes from "./routes/incomeRoutes.js";
+import forecastRoutes from "./routes/forecastRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
+
 
 // Import error middleware
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
@@ -56,6 +60,10 @@ app.use("/api/goals", goalRoutes);
 app.use("/api/recurrings", recurringExpenseRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/income", incomeRoutes);
+app.use("/api/forecast", forecastRoutes);
+app.use("/api/notifications", notificationRoutes);
+
 
 // Error handling
 app.use(notFound);

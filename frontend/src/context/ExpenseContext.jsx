@@ -1,6 +1,8 @@
+// src/context/ExpenseContext.jsx
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import API from "../utils/api";
 import { useAuth } from "./AuthContext";
+import toast from "react-hot-toast"; // ✅ Add toast
 
 const ExpenseContext = createContext();
 
@@ -20,7 +22,6 @@ export const ExpenseProvider = ({ children }) => {
       const res = await API.get("/expenses", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // ✅ Handle both array or {data: []} format
       setExpenses(Array.isArray(res.data.data) ? res.data.data : []);
     } catch (err) {
       console.error("Error fetching expenses:", err.response?.data?.message || err.message);
@@ -45,12 +46,30 @@ export const ExpenseProvider = ({ children }) => {
       const res = await API.post("/expenses", expenseData, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       const newExpense = res.data?.data || res.data;
+      const warning = res.data?.warning;
+
       setExpenses((prev) => [newExpense, ...prev]);
+
+      // ✅ Show notification
+      toast.success("Expense added successfully!");
+      if (warning) {
+        toast.error(warning, {
+          duration: 6000,
+          style: {
+            background: "#fff3cd",
+            color: "#856404",
+            border: "1px solid #ffeeba",
+          },
+        });
+      }
+
       return newExpense;
     } catch (err) {
       console.error("Error adding expense:", err.response?.data?.message || err.message);
       setError(err.response?.data?.message || "Failed to add expense");
+      toast.error(err.response?.data?.message || "Failed to add expense");
       throw err;
     } finally {
       setLoading(false);
@@ -68,10 +87,12 @@ export const ExpenseProvider = ({ children }) => {
       });
       const updatedExpense = res.data?.data || res.data;
       setExpenses((prev) => prev.map((e) => (e._id === id ? updatedExpense : e)));
+      toast.success("Expense updated!");
       return updatedExpense;
     } catch (err) {
       console.error("Error updating expense:", err.response?.data?.message || err.message);
       setError(err.response?.data?.message || "Failed to update expense");
+      toast.error(err.response?.data?.message || "Failed to update expense");
       throw err;
     } finally {
       setLoading(false);
@@ -88,9 +109,11 @@ export const ExpenseProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setExpenses((prev) => prev.filter((e) => e._id !== id));
+      toast.success("Expense deleted!");
     } catch (err) {
       console.error("Error deleting expense:", err.response?.data?.message || err.message);
       setError(err.response?.data?.message || "Failed to delete expense");
+      toast.error(err.response?.data?.message || "Failed to delete expense");
       throw err;
     } finally {
       setLoading(false);
@@ -104,7 +127,7 @@ export const ExpenseProvider = ({ children }) => {
         expenses,
         fetchExpenses,
         addExpense,
-        updateExpense,  // ✅ Added for full CRUD
+        updateExpense,
         deleteExpense,
         loading,
         error,

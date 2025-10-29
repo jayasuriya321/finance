@@ -1,28 +1,22 @@
 import express from "express";
-import { protect } from "../middleware/authMiddleware.js";
-import Income from "../models/Income.js";
+import {
+  getIncomes,
+  addIncome,
+  deleteIncome,
+  getIncomeReport,
+  updateIncome, // ✅ import this
+} from "../controllers/incomeController.js";
+import { protect } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// Get all incomes
-router.get("/", protect, async (req, res) => {
-  const incomes = await Income.find({ user: req.user.id });
-  res.json(incomes);
-});
+// CRUD
+router.get("/", protect, getIncomes);
+router.post("/", protect, addIncome);
+router.put("/:id", protect, updateIncome); // ✅ added this for editing income
+router.delete("/:id", protect, deleteIncome);
 
-// Add income
-router.post("/", protect, async (req, res) => {
-  const { source, amount } = req.body;
-  const income = new Income({ user: req.user.id, source, amount });
-  const saved = await income.save();
-  res.status(201).json(saved);
-});
-
-// Delete income
-router.delete("/:id", protect, async (req, res) => {
-  const deleted = await Income.findByIdAndDelete(req.params.id);
-  if (!deleted) return res.status(404).json({ message: "Income not found" });
-  res.json({ message: "Income deleted" });
-});
+// Aggregated Reports
+router.get("/report", protect, getIncomeReport);
 
 export default router;

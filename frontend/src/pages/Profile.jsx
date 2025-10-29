@@ -68,41 +68,45 @@ export default function Profile() {
   if (loading)
     return (
       <div className="max-w-md mx-auto p-6 animate-pulse space-y-4">
-        <div className="h-24 w-24 bg-gray-300 rounded-full mx-auto"></div>
-        <div className="h-6 bg-gray-300 rounded w-32 mx-auto"></div>
-        <div className="h-4 bg-gray-300 rounded w-full"></div>
-        <div className="h-4 bg-gray-300 rounded w-full"></div>
+        <div className="h-24 w-24 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto"></div>
+        <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-32 mx-auto"></div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full"></div>
       </div>
     );
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-2xl shadow-xl border border-gray-100">
+    <div className="max-w-md mx-auto p-6 mt-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-300">
+      {/* Profile header */}
       <div className="flex flex-col items-center">
         <div className="relative">
-          <div className="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-400">
+          <div className="h-24 w-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-400 dark:text-gray-300">
             <User className="w-12 h-12" />
           </div>
         </div>
-        <h3 className="text-2xl font-semibold mt-4 text-gray-800">My Profile</h3>
+        <h3 className="text-2xl font-semibold mt-4 text-gray-800 dark:text-gray-100">
+          My Profile
+        </h3>
       </div>
 
-      {/* Message */}
+      {/* Status message */}
       {message.text && (
         <div
           className={`mt-4 p-3 rounded-lg text-sm border shadow-sm text-center ${
             message.type === "success"
-              ? "bg-green-50 text-green-700 border-green-300"
-              : "bg-red-50 text-red-700 border-red-300"
+              ? "bg-green-50 text-green-700 border-green-300 dark:bg-green-900/30 dark:text-green-300 dark:border-green-600"
+              : "bg-red-50 text-red-700 border-red-300 dark:bg-red-900/30 dark:text-red-300 dark:border-red-600"
           }`}
         >
           {message.text}
         </div>
       )}
 
+      {/* Profile form */}
       <div className="mt-6 space-y-5">
         {/* Name */}
         <div className="relative">
-          <label className="absolute -top-3 left-3 text-gray-500 text-sm bg-white px-1">
+          <label className="absolute -top-3 left-3 text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-gray-800 px-1">
             Name
           </label>
           {editMode ? (
@@ -110,10 +114,10 @@ export default function Profile() {
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f45a57]"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#f45a57] transition-colors duration-200"
             />
           ) : (
-            <p className="text-gray-800 px-3 py-3 border border-gray-100 rounded-lg bg-gray-50">
+            <p className="text-gray-800 dark:text-gray-100 px-3 py-3 border border-gray-100 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 transition-colors duration-200">
               {user.name}
             </p>
           )}
@@ -121,7 +125,7 @@ export default function Profile() {
 
         {/* Email */}
         <div className="relative">
-          <label className="absolute -top-3 left-3 text-gray-500 text-sm bg-white px-1">
+          <label className="absolute -top-3 left-3 text-gray-500 dark:text-gray-400 text-sm bg-white dark:bg-gray-800 px-1">
             Email
           </label>
           {editMode ? (
@@ -129,10 +133,10 @@ export default function Profile() {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f45a57]"
+              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-[#f45a57] transition-colors duration-200"
             />
           ) : (
-            <p className="text-gray-800 px-3 py-3 border border-gray-100 rounded-lg bg-gray-50">
+            <p className="text-gray-800 dark:text-gray-100 px-3 py-3 border border-gray-100 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 transition-colors duration-200">
               {user.email}
             </p>
           )}
@@ -146,13 +150,13 @@ export default function Profile() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="bg-black text-white px-6 py-2 rounded-lg hover:bg-[#f45a57] transition flex items-center justify-center disabled:opacity-60 shadow"
+              className="bg-black dark:bg-[#f45a57] text-white px-6 py-2 rounded-lg hover:bg-[#f45a57] dark:hover:bg-[#f87171] transition flex items-center justify-center disabled:opacity-60 shadow"
             >
               {saving ? <ButtonLoader className="h-5 w-5" /> : "Save"}
             </button>
             <button
               onClick={() => setEditMode(false)}
-              className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition shadow"
+              className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition shadow"
             >
               Cancel
             </button>
@@ -160,7 +164,7 @@ export default function Profile() {
         ) : (
           <button
             onClick={() => setEditMode(true)}
-            className="bg-black text-white px-6 py-2 rounded-lg hover:bg-[#f45a57] transition shadow"
+            className="bg-black dark:bg-[#f45a57] text-white px-6 py-2 rounded-lg hover:bg-[#f45a57] dark:hover:bg-[#f87171] transition shadow"
           >
             Edit Profile
           </button>

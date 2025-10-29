@@ -1,4 +1,3 @@
-// models/User.js
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -27,12 +26,38 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
       minlength: [6, "Password must be at least 6 characters"],
     },
-    // Password reset
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
-    // Optional: email verification token
-    emailVerificationToken: { type: String },
+
+    // ===============================
+    // Password Reset
+    // ===============================
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+
+    // ===============================
+    // Email Verification
+    // ===============================
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
     emailVerified: { type: Boolean, default: false },
+
+    // ===============================
+    // Multi-factor Authentication (MFA)
+    // ===============================
+    mfaEnabled: { type: Boolean, default: false }, // Enable/disable MFA
+    mfaToken: String,                               // OTP token
+    mfaExpires: Date,                               // OTP expiration
+
+    // ===============================
+    // User Preferences
+    // ===============================
+    preferences: {
+      theme: { type: String, enum: ["light", "dark"], default: "light" },
+      currency: { type: String, default: "INR" },
+      notifications: {
+        email: { type: Boolean, default: true },
+        push: { type: Boolean, default: true },
+      },
+    },
   },
   { timestamps: true }
 );
@@ -55,7 +80,7 @@ userSchema.methods.matchPassword = async function (entered) {
 };
 
 // ===============================
-// Generate password reset token
+// Generate Password Reset Token
 // ===============================
 userSchema.methods.getResetPasswordToken = function () {
   const resetToken = crypto.randomBytes(20).toString("hex");
@@ -68,15 +93,43 @@ userSchema.methods.getResetPasswordToken = function () {
 };
 
 // ===============================
-// Optional: Generate email verification token
+// Generate Email Verification Token
 // ===============================
 userSchema.methods.getEmailVerificationToken = function () {
-  const verificationToken = crypto.randomBytes(20).toString("hex");
-  this.emailVerificationToken = crypto
-    .createHash("sha256")
-    .update(verificationToken)
-    .digest("hex");
-  return verificationToken;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  this.emailVerificationToken = crypto.createHash("sha256").update(otp).digest("hex");
+  this.emailVerificationExpires = Date.now() + 10 * 60 * 1000; // 10 min
+  return otp; // Return plain OTP to send via email
+};
+
+// ===============================
+// Verify Email OTP
+// ===============================
+userSchema.methods.verifyEmailToken = function (enteredOtp) {
+  const hashedOtp = crypto.createHash("sha256").update(enteredOtp).digest("hex");
+  return (
+    this.emailVerificationToken === hashedOtp &&
+    this.emailVerificationExpires &&
+    this.emailVerificationExpires > Date.now()
+  );
+};
+
+// ===============================
+// Generate MFA OTP
+// ===============================
+userSchema.methods.generateMfaToken = function () {
+  const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  this.mfaToken = crypto.createHash("sha256").update(otp).digest("hex");
+  this.mfaExpires = Date.now() + 5 * 60 * 1000; // 5 min
+  return otp; // Return plain OTP to send via email
+};
+
+// ===============================
+// Verify MFA OTP
+// ===============================
+userSchema.methods.verifyMfaToken = function (enteredOtp) {
+  const hashedOtp = crypto.createHash("sha256").update(enteredOtp).digest("hex");
+  return this.mfaToken === hashedOtp && this.mfaExpires && this.mfaExpires > Date.now();
 };
 
 export default mongoose.model("User", userSchema);

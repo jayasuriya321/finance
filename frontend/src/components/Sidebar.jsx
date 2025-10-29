@@ -6,17 +6,26 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   const location = useLocation();
   const [mounted, setMounted] = useState(false);
 
-  // Animate sidebar mount
+  // Animate sidebar mount/unmount
   useEffect(() => {
     if (isOpen) setMounted(true);
     else {
-      const timeout = setTimeout(() => setMounted(false), 300); // match transition duration
+      const timeout = setTimeout(() => setMounted(false), 300);
       return () => clearTimeout(timeout);
     }
   }, [isOpen]);
 
+  // ✅ Automatically close sidebar on route change (mobile only)
+  useEffect(() => {
+    if (isOpen && window.innerWidth < 768) {
+      toggleSidebar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
   const links = [
     { name: "Dashboard", path: "/" },
+    { name: "Income", path: "/income" },
     { name: "Expenses", path: "/expenses" },
     { name: "Budgets", path: "/budgets" },
     { name: "Categories", path: "/categories" },
@@ -26,6 +35,11 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
   ];
 
   if (!mounted) return null;
+
+  // ✅ Helper for mobile link clicks
+  const handleLinkClick = () => {
+    if (window.innerWidth < 768) toggleSidebar();
+  };
 
   return (
     <>
@@ -42,7 +56,7 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
       <aside
         className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        } md:translate-x-0 md:static md:shadow-none`}
         aria-label="Sidebar navigation"
       >
         {/* Close button for mobile */}
@@ -62,9 +76,11 @@ export default function Sidebar({ isOpen, toggleSidebar }) {
             <Link
               key={link.path}
               to={link.path}
-              onClick={() => isOpen && toggleSidebar()}
+              onClick={handleLinkClick} // ✅ ensures sidebar closes on click (mobile)
               className={`px-3 py-2 rounded hover:bg-gray-100 transition font-medium ${
-                location.pathname === link.path ? "bg-gray-200 text-gray-900" : "text-gray-700"
+                location.pathname === link.path
+                  ? "bg-gray-200 text-gray-900"
+                  : "text-gray-700"
               }`}
               role="menuitem"
               aria-current={location.pathname === link.path ? "page" : undefined}

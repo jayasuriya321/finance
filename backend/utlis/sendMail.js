@@ -1,3 +1,4 @@
+// backend/utlis/sendMail.js
 import nodemailer from "nodemailer";
 
 let transporter;

@@ -2,11 +2,11 @@
 import Budget from "../models/Budget.js";
 import Expense from "../models/Expense.js";
 
+const ALERT_THRESHOLD_PERCENT = 80; // alert when usage reaches 80% of limit
+
 // ===============================
 // GET ALL BUDGETS WITH CURRENT USAGE
 // ===============================
-const ALERT_THRESHOLD_PERCENT = 80; // alert when usage reaches 80% of limit
-
 export const getBudgets = async (req, res) => {
   try {
     const budgets = await Budget.find({ user: req.user._id });
@@ -39,7 +39,6 @@ export const getBudgets = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error fetching budgets" });
   }
 };
-
 
 // ===============================
 // ADD NEW BUDGET
@@ -157,5 +156,50 @@ export const getBudgetSummary = async (req, res) => {
   } catch (err) {
     console.error("getBudgetSummary error:", err);
     res.status(500).json({ success: false, message: "Server error generating summary" });
+  }
+};
+
+// ===============================
+// 🔔 GET BUDGET ALERTS (new)
+// ===============================
+export const getBudgetAlerts = async (req, res) => {
+  try {
+    const budgets = await Budget.find({ user: req.user._id });
+
+    const alerts = [];
+
+    for (const b of budgets) {
+      const totalSpent = await Expense.aggregate([
+        { $match: { user: req.user._id, category: b.name } },
+        { $group: { _id: null, sum: { $sum: "$amount" } } },
+      ]);
+
+      const spent = totalSpent[0]?.sum || 0;
+      const percent = b.limit > 0 ? (spent / b.limit) * 100 : 0;
+
+      if (percent >= 100) {
+        alerts.push({
+          type: "danger",
+          message: `⚠️ You exceeded your ${b.name} budget by ₹${(spent - b.limit).toLocaleString()}.`,
+        });
+      } else if (percent >= ALERT_THRESHOLD_PERCENT) {
+        alerts.push({
+          type: "warning",
+          message: `⚠️ You’ve used ${percent.toFixed(1)}% of your ${b.name} budget.`,
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      count: alerts.length,
+      data: alerts,
+    });
+  } catch (err) {
+    console.error("getBudgetAlerts error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error generating budget alerts",
+    });
   }
 };

@@ -7,11 +7,12 @@ const BudgetContext = createContext();
 export const BudgetProvider = ({ children }) => {
   const { token, ready } = useAuth();
   const [budgets, setBudgets] = useState([]);
+  const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Auto-clear messages
+  // 🧭 Success / error messages
   const showMessage = (type, message) => {
     if (type === "error") setError(message);
     else setSuccess(message);
@@ -21,7 +22,7 @@ export const BudgetProvider = ({ children }) => {
     }, 3000);
   };
 
-  /** 📦 Fetch budgets */
+  // 📦 Fetch budgets
   const fetchBudgets = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -31,19 +32,31 @@ export const BudgetProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = Array.isArray(res.data.data) ? res.data.data : [];
-      // Optional: sort by creation date
       data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setBudgets(data);
     } catch (err) {
-      console.error("Error fetching budgets:", err.response?.data?.message || err.message);
-      showMessage("error", err.response?.data?.message || "Failed to fetch budgets");
+      console.error("Error fetching budgets:", err);
+      showMessage("error", "Failed to fetch budgets");
       setBudgets([]);
     } finally {
       setLoading(false);
     }
   }, [token]);
 
-  /** ➕ Add budget */
+  // ✅ Fetch alerts
+  const fetchAlerts = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await API.get("/budgets/alerts", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) setAlerts(res.data.data);
+    } catch (err) {
+      console.error("Error fetching budget alerts:", err);
+    }
+  }, [token]);
+
+  // ➕ Add
   const addBudget = async (budgetData) => {
     if (!token) return;
     setLoading(true);
@@ -56,15 +69,15 @@ export const BudgetProvider = ({ children }) => {
       showMessage("success", "Budget added successfully!");
       return newBudget;
     } catch (err) {
-      console.error("Error adding budget:", err.response?.data?.message || err.message);
-      showMessage("error", err.response?.data?.message || "Failed to add budget");
+      console.error("Error adding budget:", err);
+      showMessage("error", "Failed to add budget");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  /** ✏️ Update budget */
+  // ✏️ Update
   const updateBudget = async (id, updatedData) => {
     if (!token) return;
     setLoading(true);
@@ -73,21 +86,19 @@ export const BudgetProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const updatedBudget = res.data.data;
-      setBudgets((prev) =>
-        prev.map((b) => (b._id === id ? updatedBudget : b))
-      );
+      setBudgets((prev) => prev.map((b) => (b._id === id ? updatedBudget : b)));
       showMessage("success", "Budget updated successfully!");
       return updatedBudget;
     } catch (err) {
-      console.error("Error updating budget:", err.response?.data?.message || err.message);
-      showMessage("error", err.response?.data?.message || "Failed to update budget");
+      console.error("Error updating budget:", err);
+      showMessage("error", "Failed to update budget");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  /** ❌ Delete budget */
+  // ❌ Delete
   const deleteBudget = async (id) => {
     if (!token) return;
     setLoading(true);
@@ -98,28 +109,79 @@ export const BudgetProvider = ({ children }) => {
       setBudgets((prev) => prev.filter((b) => b._id !== id));
       showMessage("success", "Budget deleted successfully!");
     } catch (err) {
-      console.error("Error deleting budget:", err.response?.data?.message || err.message);
-      showMessage("error", err.response?.data?.message || "Failed to delete budget");
+      console.error("Error deleting budget:", err);
+      showMessage("error", "Failed to delete budget");
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Computed values for dashboard/chart usage
+  // 📊 Combine + remove duplicates
+  const budgetInsights = useMemo(() => {
+    const localInsights = budgets
+      .map((b) => {
+        const spent = Number(b.spent || 0);
+        const limit = Number(b.limit || 0);
+        const percent = limit > 0 ? (spent / limit) * 100 : 0;
+
+        if (percent >= 100)
+          return {
+            category: b.name,
+            type: "danger",
+            message: `⚠️ You exceeded your ${b.name} budget by ₹${(spent - limit).toLocaleString()}.`,
+          };
+        else if (percent >= 80)
+          return {
+            category: b.name,
+            type: "warning",
+            message: `⚠️ You’ve used ${percent.toFixed(1)}% of your ${b.name} budget.`,
+          };
+        else return null;
+      })
+      .filter(Boolean);
+
+    // Combine + remove duplicates by category + message
+    const allAlerts = [...localInsights, ...alerts];
+    const unique = [];
+    const seen = new Set();
+
+    for (const alert of allAlerts) {
+      const key = `${alert.category}-${alert.message}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        unique.push(alert);
+      }
+    }
+
+    return unique;
+  }, [budgets, alerts]);
+
+  // 💰 Totals
   const totalBudgeted = useMemo(
-    () => budgets.reduce((acc, b) => acc + Number(b.amount || 0), 0),
+    () => budgets.reduce((acc, b) => acc + Number(b.limit || 0), 0),
     [budgets]
   );
+  const totalSpent = useMemo(
+    () => budgets.reduce((acc, b) => acc + Number(b.spent || 0), 0),
+    [budgets]
+  );
+  const totalRemaining = useMemo(
+    () => totalBudgeted - totalSpent,
+    [totalBudgeted, totalSpent]
+  );
   const overBudgetCount = useMemo(
-    () => budgets.filter((b) => Number(b.spent || 0) > Number(b.amount || 0)).length,
+    () => budgets.filter((b) => Number(b.spent || 0) > Number(b.limit || 0)).length,
     [budgets]
   );
 
-  // Auto-fetch on auth ready
+  // 🧩 Load
   useEffect(() => {
-    if (ready && token) fetchBudgets();
-  }, [ready, token, fetchBudgets]);
+    if (ready && token) {
+      fetchBudgets();
+      fetchAlerts();
+    }
+  }, [ready, token, fetchBudgets, fetchAlerts]);
 
   return (
     <BudgetContext.Provider
@@ -133,7 +195,10 @@ export const BudgetProvider = ({ children }) => {
         updateBudget,
         deleteBudget,
         totalBudgeted,
+        totalSpent,
+        totalRemaining,
         overBudgetCount,
+        budgetInsights,
       }}
     >
       {children}
@@ -141,9 +206,4 @@ export const BudgetProvider = ({ children }) => {
   );
 };
 
-// Custom hook
-export const useBudgets = () => {
-  const context = useContext(BudgetContext);
-  if (!context) throw new Error("useBudgets must be used within BudgetProvider");
-  return context;
-};
+export const useBudgets = () => useContext(BudgetContext);

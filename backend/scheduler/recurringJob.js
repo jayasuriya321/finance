@@ -1,8 +1,10 @@
 import cron from "node-cron";
 import RecurringExpense from "../models/RecurringExpense.js";
 import Expense from "../models/Expense.js";
+import Budget from "../models/Budget.js";
 import User from "../models/User.js";
-import { sendMail } from "../utils/sendMail.js";
+import Notification from "../models/Notification.js"; // ✅ Added
+import { sendMail } from "../utlis/sendMail.js";
 
 /** Helper to add frequency */
 function addFreq(date, frequency) {
@@ -29,6 +31,7 @@ export default function startRecurringJob() {
 
         let updated = false;
         while (nextRun <= now) {
+          // Create expense
           const expense = await Expense.create({
             user: r.user,
             amount: r.amount,
@@ -37,14 +40,43 @@ export default function startRecurringJob() {
             date: nextRun,
           });
 
-          // Send email reminder to the user
+          // Fetch user
           const user = await User.findById(r.user);
+
+          // Check budget for this category
+          const budget = await Budget.findOne({ user: r.user, name: r.category || r.name });
+          let alertMessage = null;
+          if (budget) {
+            const totalSpentAgg = await Expense.aggregate([
+              { $match: { user: r.user, category: budget.name } },
+              { $group: { _id: null, sum: { $sum: "$amount" } } },
+            ]);
+            const spent = totalSpentAgg[0]?.sum || 0;
+            const percentUsed = (spent / budget.limit) * 100;
+
+            if (percentUsed >= 100) {
+              alertMessage = `⚠️ You exceeded your ${budget.name} budget by ₹${(spent - budget.limit).toLocaleString()}.`;
+            } else if (percentUsed >= 80) {
+              alertMessage = `⚠️ You’ve used ${percentUsed.toFixed(1)}% of your ${budget.name} budget.`;
+            }
+          }
+
+          // Send email to user
           if (user && user.email) {
             await sendMail({
               to: user.email,
               subject: "Recurring Expense Applied",
-              text: `A recurring expense "${r.name}" of amount ${r.amount} was added to your account.`,
-              html: `<p>A recurring expense "<b>${r.name}</b>" of amount <b>${r.amount}</b> was added to your account.</p>`,
+              text: `A recurring expense "${r.name}" of amount ${r.amount} was added to your account.${alertMessage ? "\n\n" + alertMessage : ""}`,
+              html: `<p>A recurring expense "<b>${r.name}</b>" of amount <b>${r.amount}</b> was added to your account.</p>
+                     ${alertMessage ? `<p style="color:red">${alertMessage}</p>` : ""}`,
+            });
+          }
+
+          // Create in-app notification
+          if (user) {
+            await Notification.create({
+              user: r.user,
+              message: `Recurring expense "${r.name}" of ₹${r.amount} added.${alertMessage ? " " + alertMessage : ""}`,
             });
           }
 
@@ -65,5 +97,5 @@ export default function startRecurringJob() {
     timezone: "UTC",
   });
 
-  console.log("✅ Recurring job scheduled (daily at 00:05 UTC) with email notifications");
+  console.log("✅ Recurring job scheduled (daily at 00:05 UTC) with budget alerts and notifications");
 }
