@@ -7,7 +7,7 @@ dotenv.config();
 // Get allowed origins from environment variable (comma-separated)
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:5173"]; // default fallback
+  : ["https://financeapp09.netlify.app"]; // default fallback
 
 const corsOptions = {
   origin: function (origin, callback) {
